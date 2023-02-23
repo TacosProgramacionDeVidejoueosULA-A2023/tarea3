@@ -36,22 +36,7 @@ class Projectile:
     def solve_world_boundaries(self) -> None:
         r = self.get_collision_rect()
 
-        if r.left < 0:
-            settings.SOUNDS["wall_hit"].stop()
-            settings.SOUNDS["wall_hit"].play()
-            self.x = 0
-            self.vx *= -1
-        elif r.right > settings.VIRTUAL_WIDTH:
-            settings.SOUNDS["wall_hit"].stop()
-            settings.SOUNDS["wall_hit"].play()
-            self.x = settings.VIRTUAL_WIDTH - self.width
-            self.vx *= -1
-        elif r.top < 0:
-            settings.SOUNDS["wall_hit"].stop()
-            settings.SOUNDS["wall_hit"].play()
-            self.y = 0
-            self.vy *= -1
-        elif r.top > settings.VIRTUAL_HEIGHT:
+        if r.top > settings.VIRTUAL_HEIGHT:
             settings.SOUNDS["hurt"].play()
             self.in_play = False
 
