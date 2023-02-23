@@ -13,10 +13,9 @@ from typing import Any, Tuple, Optional
 import pygame
 
 import settings
-from src.Paddle import Paddle
 
 
-class Ball:
+class Projectile:
     def __init__(self, x: int, y: int, following_paddle: bool = False) -> None:
         self.x = x
         self.y = y
@@ -91,38 +90,3 @@ class Ball:
             y_shift = r2.bottom - r1.y
 
         return (x_shift, y_shift)
-
-    def rebound(self, another: Any):
-        br = self.get_collision_rect()
-        sr = another.get_collision_rect()
-
-        r = self.get_intersection(br, sr)
-
-        if r is None:
-            return
-
-        shift_x, shift_y = r
-
-        min_shift = min(abs(shift_x), abs(shift_y))
-
-        if min_shift == abs(shift_x):
-            # Collision happened from left or right
-            self.x += shift_x
-            self.vx *= -1
-        else:
-            # Collision happened from top or bottom
-            self.y += shift_y
-            self.vy *= -1
-
-    def push(self, paddle: Paddle) -> None:
-        """
-        Push the ball according to the position that it collides with the paddle and the paddle speed.
-        """
-        br = self.get_collision_rect()
-        pr = paddle.get_collision_rect()
-        d = pr.centerx - br.x
-
-        if d > 0 and paddle.vx < 0 and pr.x > 0:
-            self.vx = -50 - 8 * d
-        elif d < 0 and paddle.vx > 0 and pr.right < settings.VIRTUAL_HEIGHT:
-            self.vx = 50 - 8 * d

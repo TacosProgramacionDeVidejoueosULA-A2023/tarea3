@@ -18,6 +18,10 @@ from gale.text import render_text
 
 import settings
 import src.powerups
+from src.Ball import Ball
+from src.Cannon import Cannon
+import time
+
 
 class PlayState(BaseState):
     def enter(self, **params: dict):
@@ -31,9 +35,14 @@ class PlayState(BaseState):
         self.points_to_next_live = params["points_to_next_live"]
         self.points_to_next_grow_up = (
             self.score
-            + settings.PADDLE_GROW_UP_POINTS * (self.paddle.size + 1) * self.level
+            + settings.PADDLE_GROW_UP_POINTS *
+            (self.paddle.size + 1) * self.level
         )
         self.powerups = params.get("powerups", [])
+        self.reserve_balls_timers = {}
+        self.cannon_timer = 0
+        self.projectiles = []
+        self.cannons = []
 
         if not params.get("resume", False):
             self.balls[0].vx = random.randint(-80, 80)
@@ -51,7 +60,12 @@ class PlayState(BaseState):
         self.paddle.update(dt)
 
         for ball in self.balls:
-            ball.update(dt)
+            if ball.following_paddle:
+                ball.x = self.paddle.x + self.paddle.width // 2 - 4
+                ball.y = self.paddle.y - 8
+            else:
+                ball.update(dt)
+
             ball.solve_world_boundaries()
 
             # Check collision with the paddle
@@ -65,7 +79,8 @@ class PlayState(BaseState):
             if not ball.collides(self.brickset):
                 continue
 
-            brick = self.brickset.get_colliding_brick(ball.get_collision_rect())
+            brick = self.brickset.get_colliding_brick(
+                ball.get_collision_rect())
 
             if brick is None:
                 continue
@@ -85,18 +100,45 @@ class PlayState(BaseState):
             if self.score >= self.points_to_next_grow_up:
                 settings.SOUNDS["grow_up"].play()
                 self.points_to_next_grow_up += (
-                    settings.PADDLE_GROW_UP_POINTS * (self.paddle.size + 1) * self.level
+                    settings.PADDLE_GROW_UP_POINTS *
+                    (self.paddle.size + 1) * self.level
                 )
                 self.paddle.inc_size()
 
             # Chance to generate two more balls
-            if random.random() < 0.7:
+            if random.random() < 0.3333333:
                 r = brick.get_collision_rect()
                 self.powerups.append(
                     self.powerups_abstract_factory.get_factory("TwoMoreBall").create(
                         r.centerx - 8, r.centery - 8
-                    )
-                )
+                    ))
+            elif random.random() < 0.3333333:
+                r = brick.get_collision_rect()
+                self.powerups.append(
+                    self.powerups_abstract_factory.get_factory("ReServeBall").create(
+                        r.centerx - 8, r.centery - 8
+                    ))
+            # elif random.random() < 1:
+            #     r = brick.get_collision_rect()
+            #     self.powerups.append(
+            #         self.powerups_abstract_factory.get_factory("SimpleDoubleCannons").create(
+            #             r.centerx - 8, r.centery - 8
+            #         ))
+
+        to_delete = []
+        for timer in self.reserve_balls_timers.keys():
+            if time.time() - timer >= 2.5:
+                ball = self.reserve_balls_timers[timer]
+                ball.following_paddle = False
+                ball.vx = random.randint(-80, 80)
+                ball.vy = random.randint(-170, -100)
+                to_delete.append(timer)
+
+        if len(self.cannons) > 0  and time.time() - self.cannon_timer >= 2.5:
+            self.cannons = []
+
+        for item in to_delete:
+            del self.reserve_balls_timers[item]
 
         # Removing all balls that are not in play
         self.balls = [ball for ball in self.balls if ball.in_play]
@@ -145,6 +187,13 @@ class PlayState(BaseState):
                 live_factor=self.live_factor,
             )
 
+        if len(self.cannons) > 0:
+            self.cannons[0].x = self.paddle.x-self.cannons[0].width
+            self.cannons[0].y = self.paddle.y - self.cannons[0].height
+
+            self.cannons[1].x = self.paddle.x+self.paddle.width
+            self.cannons[1].y = self.paddle.y - self.cannons[1].height
+
     def render(self, surface: pygame.Surface) -> None:
         heart_x = settings.VIRTUAL_WIDTH - 120
 
@@ -152,7 +201,8 @@ class PlayState(BaseState):
         # Draw filled hearts
         while i < self.lives:
             surface.blit(
-                settings.TEXTURES["hearts"], (heart_x, 5), settings.FRAMES["hearts"][0]
+                settings.TEXTURES["hearts"], (heart_x,
+                                              5), settings.FRAMES["hearts"][0]
             )
             heart_x += 11
             i += 1
@@ -160,7 +210,8 @@ class PlayState(BaseState):
         # Draw empty hearts
         while i < 3:
             surface.blit(
-                settings.TEXTURES["hearts"], (heart_x, 5), settings.FRAMES["hearts"][1]
+                settings.TEXTURES["hearts"], (heart_x,
+                                              5), settings.FRAMES["hearts"][1]
             )
             heart_x += 11
             i += 1
@@ -180,6 +231,12 @@ class PlayState(BaseState):
 
         for ball in self.balls:
             ball.render(surface)
+
+        for cannon in self.cannons:
+            cannon.render(surface)
+
+        for projectile in self.projectiles:
+            projectile.render(surface)
 
         for powerup in self.powerups:
             powerup.render(surface)
@@ -208,3 +265,23 @@ class PlayState(BaseState):
                 live_factor=self.live_factor,
                 powerups=self.powerups,
             )
+        elif input_id == "enter" and input_data.pressed:
+            for ball in self.balls:
+                if ball.following_paddle:
+                    ball.following_paddle = False
+                    ball.vx = random.randint(-80, 80)
+                    ball.vy = random.randint(-170, -100)
+
+            self.reserve_balls_timers = {}
+        elif input_id == "fire" and input_data.pressed:
+            for cannon in self.cannons:
+                cannon.shoot()
+
+    def enable_cannons(self):
+        if len(self.cannons) == 0:
+            self.cannons.append(
+                Cannon(self.paddle.x, self.paddle.y+self.paddle.height, self))
+            self.cannons.append(
+                Cannon(self.paddle.x-self.paddle.width, self.paddle.y+self.paddle.height, self))
+            
+            self.cannon_timer = time.time()
