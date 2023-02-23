@@ -97,33 +97,48 @@ class PlayState(BaseState):
                 self.points_to_next_live += settings.LIVE_POINTS_BASE * self.live_factor
 
             # Check growing up of the paddle
-            if self.score >= self.points_to_next_grow_up:
-                settings.SOUNDS["grow_up"].play()
-                self.points_to_next_grow_up += (
-                    settings.PADDLE_GROW_UP_POINTS *
-                    (self.paddle.size + 1) * self.level
-                )
-                self.paddle.inc_size()
+            # if self.score >= self.points_to_next_grow_up:
+            #     settings.SOUNDS["grow_up"].play()
+            #     self.points_to_next_grow_up += (
+            #         settings.PADDLE_GROW_UP_POINTS *
+            #         (self.paddle.size + 1) * self.level
+            #     )
+            #     self.paddle.inc_size()
 
-            # Chance to generate two more balls
-            if random.random() < 0.3333333:
-                r = brick.get_collision_rect()
-                self.powerups.append(
-                    self.powerups_abstract_factory.get_factory("TwoMoreBall").create(
-                        r.centerx - 8, r.centery - 8
-                    ))
-            elif random.random() < 0.3333333:
-                r = brick.get_collision_rect()
-                self.powerups.append(
-                    self.powerups_abstract_factory.get_factory("ReServeBall").create(
-                        r.centerx - 8, r.centery - 8
-                    ))
-            # elif random.random() < 1:
+            # # Chance to generate two more balls
+            # if random.random() < 0.3333333:
             #     r = brick.get_collision_rect()
             #     self.powerups.append(
-            #         self.powerups_abstract_factory.get_factory("SimpleDoubleCannons").create(
+            #         self.powerups_abstract_factory.get_factory("TwoMoreBall").create(
             #             r.centerx - 8, r.centery - 8
             #         ))
+            # elif random.random() < 0.3333333:
+            #     r = brick.get_collision_rect()
+            #     self.powerups.append(
+            #         self.powerups_abstract_factory.get_factory("ReServeBall").create(
+            #             r.centerx - 8, r.centery - 8
+            #         ))
+            # el
+            if random.random() < 1:
+                r = brick.get_collision_rect()
+                self.powerups.append(
+                    self.powerups_abstract_factory.get_factory("SimpleDoubleCannons").create(
+                        r.centerx - 8, r.centery - 8
+                    ))
+
+        for projectile in self.projectiles:
+            projectile.update(dt)
+
+            if projectile.collides(self.brickset):
+                brick = self.brickset.get_colliding_brick(
+                projectile.get_collision_rect())
+
+                if brick is None:
+                    continue
+
+                brick.hit()
+                self.score += brick.score()
+                projectile.in_play = False
 
         to_delete = []
         for timer in self.reserve_balls_timers.keys():
@@ -134,7 +149,7 @@ class PlayState(BaseState):
                 ball.vy = random.randint(-170, -100)
                 to_delete.append(timer)
 
-        if len(self.cannons) > 0  and time.time() - self.cannon_timer >= 2.5:
+        if len(self.cannons) > 0 and time.time() - self.cannon_timer >= 2.5:
             self.cannons = []
 
         for item in to_delete:
@@ -142,6 +157,8 @@ class PlayState(BaseState):
 
         # Removing all balls that are not in play
         self.balls = [ball for ball in self.balls if ball.in_play]
+        self.projectiles = [
+            projectile for projectile in self.projectiles if projectile.in_play]
 
         self.brickset.update(dt)
 
@@ -283,5 +300,5 @@ class PlayState(BaseState):
                 Cannon(self.paddle.x, self.paddle.y+self.paddle.height, self))
             self.cannons.append(
                 Cannon(self.paddle.x-self.paddle.width, self.paddle.y+self.paddle.height, self))
-            
+
             self.cannon_timer = time.time()
