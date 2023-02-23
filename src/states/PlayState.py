@@ -96,30 +96,29 @@ class PlayState(BaseState):
                 self.live_factor += 0.5
                 self.points_to_next_live += settings.LIVE_POINTS_BASE * self.live_factor
 
-            # Check growing up of the paddle
-            # if self.score >= self.points_to_next_grow_up:
-            #     settings.SOUNDS["grow_up"].play()
-            #     self.points_to_next_grow_up += (
-            #         settings.PADDLE_GROW_UP_POINTS *
-            #         (self.paddle.size + 1) * self.level
-            #     )
-            #     self.paddle.inc_size()
+            #Check growing up of the paddle
+            if self.score >= self.points_to_next_grow_up:
+                settings.SOUNDS["grow_up"].play()
+                self.points_to_next_grow_up += (
+                    settings.PADDLE_GROW_UP_POINTS *
+                    (self.paddle.size + 1) * self.level
+                )
+                self.paddle.inc_size()
 
-            # # Chance to generate two more balls
-            # if random.random() < 0.3333333:
-            #     r = brick.get_collision_rect()
-            #     self.powerups.append(
-            #         self.powerups_abstract_factory.get_factory("TwoMoreBall").create(
-            #             r.centerx - 8, r.centery - 8
-            #         ))
-            # elif random.random() < 0.3333333:
-            #     r = brick.get_collision_rect()
-            #     self.powerups.append(
-            #         self.powerups_abstract_factory.get_factory("ReServeBall").create(
-            #             r.centerx - 8, r.centery - 8
-            #         ))
-            # el
-            if random.random() < 1:
+            # Chance to generate two more balls
+            if random.random() < 0.25:
+                r = brick.get_collision_rect()
+                self.powerups.append(
+                    self.powerups_abstract_factory.get_factory("TwoMoreBall").create(
+                        r.centerx - 8, r.centery - 8
+                    ))
+            elif random.random() < 0.25:
+                r = brick.get_collision_rect()
+                self.powerups.append(
+                    self.powerups_abstract_factory.get_factory("ReServeBall").create(
+                        r.centerx - 8, r.centery - 8
+                    ))
+            elif random.random() < 0.25:
                 r = brick.get_collision_rect()
                 self.powerups.append(
                     self.powerups_abstract_factory.get_factory("SimpleDoubleCannons").create(
@@ -130,6 +129,8 @@ class PlayState(BaseState):
             projectile.update(dt)
 
             if projectile.collides(self.brickset):
+                projectile.solve_world_boundaries()
+
                 brick = self.brickset.get_colliding_brick(
                 projectile.get_collision_rect())
 
