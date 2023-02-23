@@ -27,7 +27,7 @@ class HighScoreState(BaseState):
 
     def on_input(self, input_id: str, input_data: InputData):
         if input_id == "enter" and input_data.pressed:
-            self.state_machine.change("start")
+            self.state_machine.change("start", speed=1)
 
     def render(self, surface: pygame.Surface) -> None:
         render_text(

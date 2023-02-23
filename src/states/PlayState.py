@@ -29,14 +29,14 @@ class PlayState(BaseState):
         self.score = params["score"]
         self.lives = params["lives"]
         self.paddle = params["paddle"]
+        self.speed = params["speed"]
         self.balls = params["balls"]
         self.brickset = params["brickset"]
         self.live_factor = params["live_factor"]
         self.points_to_next_live = params["points_to_next_live"]
         self.points_to_next_grow_up = (
             self.score
-            + settings.PADDLE_GROW_UP_POINTS *
-            (self.paddle.size + 1) * self.level
+            + settings.PADDLE_GROW_UP_POINTS * (self.paddle.size + 1) * self.level
         )
         self.powerups = params.get("powerups", [])
         self.reserve_balls_timers = {}
@@ -79,8 +79,7 @@ class PlayState(BaseState):
             if not ball.collides(self.brickset):
                 continue
 
-            brick = self.brickset.get_colliding_brick(
-                ball.get_collision_rect())
+            brick = self.brickset.get_colliding_brick(ball.get_collision_rect())
 
             if brick is None:
                 continue
@@ -100,8 +99,7 @@ class PlayState(BaseState):
             if self.score >= self.points_to_next_grow_up:
                 settings.SOUNDS["grow_up"].play()
                 self.points_to_next_grow_up += (
-                    settings.PADDLE_GROW_UP_POINTS *
-                    (self.paddle.size + 1) * self.level
+                    settings.PADDLE_GROW_UP_POINTS * (self.paddle.size + 1) * self.level
                 )
                 self.paddle.inc_size()
 
@@ -115,13 +113,19 @@ class PlayState(BaseState):
             elif random.random() < 0.25:
                 r = brick.get_collision_rect()
                 self.powerups.append(
-                    self.powerups_abstract_factory.get_factory("ReServeBall").create(
+                    self.powerups_abstract_factory.get_factory("SpeedUp").create(
                         r.centerx - 8, r.centery - 8
                     ))
             elif random.random() < 0.25:
                 r = brick.get_collision_rect()
                 self.powerups.append(
                     self.powerups_abstract_factory.get_factory("SimpleDoubleCannons").create(
+                        r.centerx - 8, r.centery - 8
+                    ))
+            elif random.random() < 0.25:
+                r = brick.get_collision_rect()
+                self.powerups.append(
+                    self.powerups_abstract_factory.get_factory("ReServeBall").create(
                         r.centerx - 8, r.centery - 8
                     ))
 
@@ -219,8 +223,7 @@ class PlayState(BaseState):
         # Draw filled hearts
         while i < self.lives:
             surface.blit(
-                settings.TEXTURES["hearts"], (heart_x,
-                                              5), settings.FRAMES["hearts"][0]
+                settings.TEXTURES["hearts"], (heart_x, 5), settings.FRAMES["hearts"][0]
             )
             heart_x += 11
             i += 1
@@ -228,8 +231,7 @@ class PlayState(BaseState):
         # Draw empty hearts
         while i < 3:
             surface.blit(
-                settings.TEXTURES["hearts"], (heart_x,
-                                              5), settings.FRAMES["hearts"][1]
+                settings.TEXTURES["hearts"], (heart_x, 5), settings.FRAMES["hearts"][1]
             )
             heart_x += 11
             i += 1
@@ -262,12 +264,12 @@ class PlayState(BaseState):
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if input_id == "move_left":
             if input_data.pressed:
-                self.paddle.vx = -settings.PADDLE_SPEED
+                self.paddle.vx = -settings.PADDLE_SPEED * self.speed
             elif input_data.released and self.paddle.vx < 0:
                 self.paddle.vx = 0
         elif input_id == "move_right":
             if input_data.pressed:
-                self.paddle.vx = settings.PADDLE_SPEED
+                self.paddle.vx = settings.PADDLE_SPEED * self.speed
             elif input_data.released and self.paddle.vx > 0:
                 self.paddle.vx = 0
         elif input_id == "pause" and input_data.pressed:

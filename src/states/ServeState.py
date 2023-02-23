@@ -102,6 +102,7 @@ class ServeState(BaseState):
                 score=self.score,
                 lives=self.lives,
                 paddle=self.paddle,
+                speed=1,
                 balls=[self.ball],
                 brickset=self.brickset,
                 points_to_next_live=self.points_to_next_live,
