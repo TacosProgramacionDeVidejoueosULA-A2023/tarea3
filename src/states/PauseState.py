@@ -74,6 +74,7 @@ class PauseState(BaseState):
                 score=self.score,
                 lives=self.lives,
                 paddle=self.paddle,
+                speed=1,
                 balls=self.balls,
                 brickset=self.brickset,
                 points_to_next_live=self.points_to_next_live,
