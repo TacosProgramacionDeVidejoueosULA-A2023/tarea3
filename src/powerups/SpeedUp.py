@@ -23,9 +23,9 @@ class SpeedUp(PowerUp):
         super().__init__(x, y, 8)
 
     def take(self, play_state: TypeVar("PlayState")) -> None:
-        self.play_state = play_state
         settings.SOUNDS["paddle_hit"].stop()
         settings.SOUNDS["paddle_hit"].play()
-        play_state.speed = 2
+        self.play_state = play_state
+        self.play_state.enable_speed_up()
+
         self.in_play = False
-        self.speed_up_timmer = time.time()

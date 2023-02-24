@@ -40,7 +40,7 @@ class PlayState(BaseState):
         )
         self.powerups = params.get("powerups", [])
         self.reserve_balls_timers = {}
-        self.speed_up_timmer = 0
+        self.speed_up_timer = 0
         self.cannon_timer = 0
         self.projectiles = []
         self.cannons = []
@@ -155,10 +155,10 @@ class PlayState(BaseState):
                 ball.vy = random.randint(-170, -100)
                 to_delete.append(timer)
 
-        if self.speed_up_timmer != 0:
-            if time.time() - self.speed_up_timmer >= 2.5:
-                self.speed_up_timmer = 0
+        if self.speed_up_timer != 0:
+            if time.time() - self.speed_up_timer >= 5:
                 self.speed = 1
+                self.speed_up_timer = 0
 
         if len(self.cannons) > 0 and time.time() - self.cannon_timer >= 2.5:
             self.cannons = []
@@ -302,6 +302,9 @@ class PlayState(BaseState):
         elif input_id == "fire" and input_data.pressed:
             for cannon in self.cannons:
                 cannon.shoot()
+    def enable_speed_up(self):
+        self.speed_up_timer = time.time()
+        self.speed = 2
 
     def enable_cannons(self):
         if len(self.cannons) == 0:
