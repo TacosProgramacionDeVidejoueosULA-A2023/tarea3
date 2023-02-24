@@ -70,15 +70,16 @@ SOUNDS = {
 }
 
 TEXTURES = {
+    "projectile": pygame.image.load(BASE_DIR / "graphics" / "projectile.png"),
     "background": pygame.image.load(BASE_DIR / "graphics" / "background.png"),
     "spritesheet": pygame.image.load(BASE_DIR / "graphics" / "breakout.png"),
     "hearts": pygame.image.load(BASE_DIR / "graphics" / "hearts.png"),
     "arrows": pygame.image.load(BASE_DIR / "graphics" / "arrows.png"),
     "cannon": pygame.image.load(BASE_DIR / "graphics" / "canon.png"),
-    "projectile": pygame.image.load(BASE_DIR / "graphics" / "projectile.png")
 }
 
 FRAMES = {
+    "projectile": generate_frames(TEXTURES["projectile"], 12, 23),
     "paddles": generate_paddle_frames(),
     "balls": generate_ball_frames(),
     "bricks": generate_brick_frames(TEXTURES["spritesheet"]),

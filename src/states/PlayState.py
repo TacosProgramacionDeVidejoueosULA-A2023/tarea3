@@ -105,25 +105,25 @@ class PlayState(BaseState):
                 self.paddle.inc_size()
 
             # Chance to generate two more balls
-            if random.random() < 0.25:
+            if random.random() < 0.1:
                 r = brick.get_collision_rect()
                 self.powerups.append(
                     self.powerups_abstract_factory.get_factory("TwoMoreBall").create(
                         r.centerx - 8, r.centery - 8
                     ))
-            elif random.random() < 0.9:
+            elif random.random() < 0.3:
                 r = brick.get_collision_rect()
                 self.powerups.append(
                     self.powerups_abstract_factory.get_factory("SpeedUp").create(
                         r.centerx - 8, r.centery - 8
                     ))
-            elif random.random() < 0.25:
+            elif random.random() < 0.3:
                 r = brick.get_collision_rect()
                 self.powerups.append(
                     self.powerups_abstract_factory.get_factory("SimpleDoubleCannons").create(
                         r.centerx - 8, r.centery - 8
                     ))
-            elif random.random() < 0.25:
+            elif random.random() < 0.3:
                 r = brick.get_collision_rect()
                 self.powerups.append(
                     self.powerups_abstract_factory.get_factory("ReServeBall").create(

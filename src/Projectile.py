@@ -19,14 +19,14 @@ class Projectile:
     def __init__(self, x: int, y: int, following_paddle: bool = False) -> None:
         self.x = x
         self.y = y
-        self.width = 8
-        self.height = 8
+        self.width = 12
+        self.height = 23
 
         self.vx = 0
-        self.vy = 0
+        self.vy = 10
 
-        self.texture = settings.TEXTURES["spritesheet"]
-        self.frame = random.randint(0, 6)
+        self.texture = settings.TEXTURES["projectile"]
+        self.frame = 0
         self.in_play = True
         self.following_paddle = following_paddle
 
@@ -44,12 +44,11 @@ class Projectile:
         return self.get_collision_rect().colliderect(another.get_collision_rect())
 
     def update(self, dt: float) -> None:
-        self.x += self.vx * dt
         self.y += self.vy * dt
 
     def render(self, surface):
         surface.blit(
-            self.texture, (self.x, self.y), settings.FRAMES["balls"][self.frame]
+            self.texture, (self.x, self.y), settings.FRAMES["projectile"][self.frame]
         )
 
     @staticmethod
