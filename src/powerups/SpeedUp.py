@@ -28,3 +28,4 @@ class SpeedUp(PowerUp):
         settings.SOUNDS["paddle_hit"].play()
         play_state.speed = 2
         self.in_play = False
+        self.speed_up_timmer = time.time()

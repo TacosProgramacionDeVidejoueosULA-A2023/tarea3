@@ -40,6 +40,7 @@ class PlayState(BaseState):
         )
         self.powerups = params.get("powerups", [])
         self.reserve_balls_timers = {}
+        self.speed_up_timmer = 0
         self.cannon_timer = 0
         self.projectiles = []
         self.cannons = []
@@ -110,7 +111,7 @@ class PlayState(BaseState):
                     self.powerups_abstract_factory.get_factory("TwoMoreBall").create(
                         r.centerx - 8, r.centery - 8
                     ))
-            elif random.random() < 0.25:
+            elif random.random() < 0.9:
                 r = brick.get_collision_rect()
                 self.powerups.append(
                     self.powerups_abstract_factory.get_factory("SpeedUp").create(
@@ -153,6 +154,11 @@ class PlayState(BaseState):
                 ball.vx = random.randint(-80, 80)
                 ball.vy = random.randint(-170, -100)
                 to_delete.append(timer)
+
+        if self.speed_up_timmer != 0:
+            if time.time() - self.speed_up_timmer >= 2.5:
+                self.speed_up_timmer = 0
+                self.speed = 1
 
         if len(self.cannons) > 0 and time.time() - self.cannon_timer >= 2.5:
             self.cannons = []
