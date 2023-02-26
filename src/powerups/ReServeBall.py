@@ -25,17 +25,8 @@ class ReServeBall(PowerUp):
     def __init__(self, x: int, y: int) -> None:
         super().__init__(x, y, 8)
         self.ball_factory = Factory(Ball)
-        self.play_state = None
-
+        
     def take(self, play_state: TypeVar("PlayState")) -> None:
-        self.play_state = play_state
-        paddle = play_state.paddle
-        ball = self.ball_factory.create(paddle.x + paddle.width // 2 - 4, paddle.y - 8, {
-            "following_paddle": True
-        })
-        settings.SOUNDS["paddle_hit"].stop()
-        settings.SOUNDS["paddle_hit"].play()
-
-        self.play_state.balls.append(ball)
+        play_state.reserve_balls_timer = time.time()
         self.in_play = False
-        self.play_state.reserve_balls_timers[time.time()] = ball
+        

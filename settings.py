@@ -79,7 +79,7 @@ TEXTURES = {
 }
 
 FRAMES = {
-    "projectile": generate_frames(TEXTURES["projectile"], 12, 23),
+    "projectile": generate_frames(TEXTURES["projectile"], 3, 6),
     "paddles": generate_paddle_frames(),
     "balls": generate_ball_frames(),
     "bricks": generate_brick_frames(TEXTURES["spritesheet"]),

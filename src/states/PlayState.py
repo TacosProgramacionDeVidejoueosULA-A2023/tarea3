@@ -36,10 +36,11 @@ class PlayState(BaseState):
         self.points_to_next_live = params["points_to_next_live"]
         self.points_to_next_grow_up = (
             self.score
-            + settings.PADDLE_GROW_UP_POINTS * (self.paddle.size + 1) * self.level
+            + settings.PADDLE_GROW_UP_POINTS *
+            (self.paddle.size + 1) * self.level
         )
         self.powerups = params.get("powerups", [])
-        self.reserve_balls_timers = {}
+        self.reserve_balls_timer = 0
         self.speed_up_timer = 0
         self.cannon_timer = 0
         self.projectiles = []
@@ -75,12 +76,22 @@ class PlayState(BaseState):
                 settings.SOUNDS["paddle_hit"].play()
                 ball.rebound(self.paddle)
                 ball.push(self.paddle)
+                ball.following_paddle = self.reserve_balls_timer > 0
+
+            if self.reserve_balls_timer > 0 and \
+                    time.time() - self.reserve_balls_timer >= 2.5 and \
+                    ball.following_paddle:
+                ball.following_paddle = False
+                ball.vx = random.randint(-80, 80)
+                ball.vy = random.randint(-170, -100)
+                self.reserve_balls_timer = 0
 
             # Check collision with brickset
             if not ball.collides(self.brickset):
                 continue
 
-            brick = self.brickset.get_colliding_brick(ball.get_collision_rect())
+            brick = self.brickset.get_colliding_brick(
+                ball.get_collision_rect())
 
             if brick is None:
                 continue
@@ -96,11 +107,12 @@ class PlayState(BaseState):
                 self.live_factor += 0.5
                 self.points_to_next_live += settings.LIVE_POINTS_BASE * self.live_factor
 
-            #Check growing up of the paddle
+            # Check growing up of the paddle
             if self.score >= self.points_to_next_grow_up:
                 settings.SOUNDS["grow_up"].play()
                 self.points_to_next_grow_up += (
-                    settings.PADDLE_GROW_UP_POINTS * (self.paddle.size + 1) * self.level
+                    settings.PADDLE_GROW_UP_POINTS *
+                    (self.paddle.size + 1) * self.level
                 )
                 self.paddle.inc_size()
 
@@ -137,7 +149,7 @@ class PlayState(BaseState):
                 projectile.solve_world_boundaries()
 
                 brick = self.brickset.get_colliding_brick(
-                projectile.get_collision_rect())
+                    projectile.get_collision_rect())
 
                 if brick is None:
                     continue
@@ -146,15 +158,6 @@ class PlayState(BaseState):
                 self.score += brick.score()
                 projectile.in_play = False
 
-        to_delete = []
-        for timer in self.reserve_balls_timers.keys():
-            if time.time() - timer >= 2.5:
-                ball = self.reserve_balls_timers[timer]
-                ball.following_paddle = False
-                ball.vx = random.randint(-80, 80)
-                ball.vy = random.randint(-170, -100)
-                to_delete.append(timer)
-
         if self.speed_up_timer != 0:
             if time.time() - self.speed_up_timer >= 5:
                 self.speed = 1
@@ -162,9 +165,6 @@ class PlayState(BaseState):
 
         if len(self.cannons) > 0 and time.time() - self.cannon_timer >= 2.5:
             self.cannons = []
-
-        for item in to_delete:
-            del self.reserve_balls_timers[item]
 
         # Removing all balls that are not in play
         self.balls = [ball for ball in self.balls if ball.in_play]
@@ -229,7 +229,8 @@ class PlayState(BaseState):
         # Draw filled hearts
         while i < self.lives:
             surface.blit(
-                settings.TEXTURES["hearts"], (heart_x, 5), settings.FRAMES["hearts"][0]
+                settings.TEXTURES["hearts"], (heart_x,
+                                              5), settings.FRAMES["hearts"][0]
             )
             heart_x += 11
             i += 1
@@ -237,7 +238,8 @@ class PlayState(BaseState):
         # Draw empty hearts
         while i < 3:
             surface.blit(
-                settings.TEXTURES["hearts"], (heart_x, 5), settings.FRAMES["hearts"][1]
+                settings.TEXTURES["hearts"], (heart_x,
+                                              5), settings.FRAMES["hearts"][1]
             )
             heart_x += 11
             i += 1
@@ -302,6 +304,7 @@ class PlayState(BaseState):
         elif input_id == "fire" and input_data.pressed:
             for cannon in self.cannons:
                 cannon.shoot()
+
     def enable_speed_up(self):
         self.speed_up_timer = time.time()
         self.speed = 2
